@@ -1,0 +1,25 @@
+.DS_Store
+portable_mode
+bin
+data
+obs-plugins
+config/obs-studio/profiler_data
+config/obs-studio/logs
+config/obs-studio/crashes
+config/obs-studio/updates
+config/obs-studio/plugin_config/obs-browser/obs_profile_cookies
+config/obs-studio/plugin_config/obs-browser/Cache
+config/obs-studio/plugin_config/obs-browser/Code Cache
+config/obs-studio/plugin_config/obs-browser/LOG
+config/obs-studio/plugin_config/obs-browser/LOG.old
+config/obs-studio/plugin_config/obs-browser/LOCK
+config/obs-studio/plugin_config/obs-browser/*.log
+config/obs-studio/plugin_config/obs-browser/GPUCache
+config/obs-studio/plugin_config/obs-browser/Local Storage
+config/obs-studio/plugin_config/obs-browser/Network/Network Persistent State
+config/obs-studio/plugin_config/obs-browser/Session Storage/*.log
+config/obs-studio/plugin_config/obs-browser/Session Storage/LOG
+config/obs-studio/plugin_config/obs-browser/Session Storage/LOG.old
+config/obs-studio/plugin_config/obs-browser/Visited Links
+config/obs-studio/plugin_config/obs-browser/LocalPrefs.json
+config/obs-studio/safe_mode
