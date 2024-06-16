@@ -3,20 +3,41 @@ param (
 )
 
 function Get-BashPath {
+    function IsMsysBash($bashPath) {
+        try {
+            $versionInfo = & $bashPath --version 2>$null
+            return $versionInfo -like "*msys*"
+        } catch {
+            return $false
+        }
+    }
+
     $bashCommand = "bash"
     $bashPath = Get-Command $bashCommand -ErrorAction SilentlyContinue
-
+    
     if ($null -ne $bashPath) {
-        return $bashPath.Source
+        # Check if the found bash is from Git by checking its version
+        if (IsMsysBash $bashPath.Source) {
+            return $bashPath.Source
+        }
     }
 
-    $programFilesPath = [Environment]::GetFolderPath("ProgramFiles")
-    $gitBashPath = Join-Path $programFilesPath "Git\bin\bash.exe"
+    # Check common installation directories for Git Bash
+    $gitRootPaths = @(
+        $env:GIT_INSTALL_ROOT,
+        (Join-Path $env:ProgramFiles "Git"),
+        (Join-Path $env:ProgramFiles`(x86`) "Git")
+    ) | Where-Object { $_ -ne $null } # Filter out null paths
 
-    if (Test-Path $gitBashPath) {
-        return $gitBashPath
+    foreach ($gitRootPath in $gitRootPaths) {
+        $gitBashPath = Join-Path $gitRootPath "bin\bash.exe"
+
+        if ((Test-Path $gitBashPath) -and (IsMsysBash $gitBashPath)) {
+            return $gitBashPath
+        }
     }
 
+    # If bash is not found, return $null
     return $null
 }
 
@@ -177,6 +198,6 @@ if ($PWD.Path -eq $HOME) {
     Write-Host "Changed to 'obs-studio-portable' directory."
 }
 
-RunBashScript
 CheckAndInstallVCRedist2022
+RunBashScript
 New-OBS-Studio-Shortcut
