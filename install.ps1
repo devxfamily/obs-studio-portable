@@ -188,6 +188,55 @@ function New-OBS-Studio-Shortcut {
     Write-Host "Created shortcut $shortcutPath -> $obsExecutablePath"
 }
 
+function Test-IsAdmin {
+	return ([System.Security.Principal.WindowsIdentity]::GetCurrent().UserClaims | Where-Object { $_.Value -eq 'S-1-5-32-544'})
+}
+
+function RunAsAdmin {
+    param (
+        [ScriptBlock]$scriptBlock,
+        [string]$workingDirectory = $PWD.Path
+    )
+    $process = Start-Process powershell -ArgumentList (
+        "-NoProfile",
+        "-ExecutionPolicy Bypass",
+        "-Command `"Set-Location -Path '$workingDirectory'`n$scriptBlock`""
+    ) -Wait -Verb RunAs -WindowStyle Hidden -PassThru
+    return $process.ExitCode
+}
+
+function CheckAndInstallOBSVirtualCamera() {
+    if ($Prompt) {
+        $installVC = Read-Host "Do you want to install OBS Virtual Cameras? (Y/n)"
+        if ($installVC -eq "N" -or $installVC -eq "n") {
+            Write-Output "Installation cancelled."
+            exit 1
+        }
+    }
+    if (!(Test-IsAdmin)) {
+        [console]::error.writeline("You must be an administrator to install OBS Virtual Cameras")
+        exit 1
+    }
+    RunAsAdmin {
+        $dll32Path = Join-Path $PWD "data\obs-plugins\win-dshow\obs-virtualcam-module32.dll"
+        $dll64Path = Join-Path $PWD "data\obs-plugins\win-dshow\obs-virtualcam-module64.dll"
+        & regsvr32.exe /i /s $dll32Path
+        & regsvr32.exe /i /s $dll64Path
+    } | Out-Null
+    # 32-bit
+    if (Test-Path "HKLM:\SOFTWARE\Classes\WOW6432Node\CLSID\{A3FCE0F5-3493-419F-958A-ABA1250EC20B}") {
+        Write-Host "OBS Virtual Camera 32-bit successfully installed"
+    } else {
+        Write-Host "OBS Virtual Camera 32-bit installation failed"
+    }
+    # 64-bit
+    if (Test-Path "HKLM:\SOFTWARE\Classes\CLSID\{A3FCE0F5-3493-419F-958A-ABA1250EC20B}") {
+        Write-Host "OBS Virtual Camera 64-bit successfully installed"
+    } else {
+        Write-Host "OBS Virtual Camera 64-bit installation failed"
+    }
+}
+
 if ($PWD.Path -eq $HOME) {
     Write-Host "Current directory is your home directory."
     $portableDir = Join-Path -Path $HOME -ChildPath "obs-studio-portable"
@@ -201,3 +250,4 @@ if ($PWD.Path -eq $HOME) {
 CheckAndInstallVCRedist2022
 RunBashScript
 New-OBS-Studio-Shortcut
+CheckAndInstallOBSVirtualCamera
